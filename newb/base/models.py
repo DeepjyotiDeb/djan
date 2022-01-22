@@ -13,3 +13,6 @@ class Room(models.Model): #id created by default
 
     def __str__(self):
         return self.name
+
+class Message(models.Model):
+    User = 
