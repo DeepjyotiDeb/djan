@@ -9,6 +9,7 @@
         <div>
             {%for room in rooms%}
             <div>
+                <a href = "{% url 'update-room' room.id %}">Edit</a>
                 <span>
                    username: @{{room.host.username}}
                 </span>

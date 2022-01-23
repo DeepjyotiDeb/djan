@@ -17,9 +17,13 @@ class Room(models.Model): #id created by default
     updated = models.DateTimeField(auto_now = True)
     created = models.DateTimeField(auto_now_add = True)
 
+    
+    class Meta: #order by which data is displayed
+        ordering = ['-updated', '-created']
+
     def __str__(self):
         return self.name
-
+    
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE) #SET_NULL to preserve room on parent deletion
