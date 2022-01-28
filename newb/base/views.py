@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.contrib.auth.models import User #creating a user model using django library
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
 from .models import Room, Topic
 from .forms import RoomForm
 import pdb
@@ -22,12 +23,12 @@ import pdb
 #     return render(request, 'base/login_register.html', context)
 
 def loginPage(request):
-
+    page = 'login'
     if request.user.is_authenticated:
         return redirect('home')
 
     if request.method=='POST':
-        username = request.POST.get('username')
+        username = request.POST.get('username').lower()
         password = request.POST.get('password')
         
         try:
@@ -41,8 +42,24 @@ def loginPage(request):
             return redirect('home')
         else:
             messages.error(request, 'Username OR password does not exit')
-    context = {}
+    context = {'page': page}
     return render(request, 'base/login_register.html', context)
+
+def registerPage(request):
+    form = UserCreationForm()
+
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False) #to get user object? to make sure data can be clean data?
+            user.username = user.username.lower()
+            user.save()
+            login(request, user) #log the user
+            return redirect('home')
+        else:
+            messages.error(request, 'an error occured during registration')
+            
+    return render(request, 'base/login_register.html', {'form':form} )
 
 def logoutUser(request):
     logout(request)  #deletes session token

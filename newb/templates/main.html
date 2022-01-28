@@ -9,7 +9,7 @@
 <body>
     {%include 'navbar.html'%}
 
-    {% if messages %}
+    {% if messages %} {%comment%} flash messages {% endcomment %}
     <ul class="messages">
         {% for message in messages %}
         <li></li>{{ message }}</li>
