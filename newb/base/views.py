@@ -76,14 +76,16 @@ def home(request):
 
     topics = Topic.objects.all()
     room_count = rooms.count() #works faster than len
-
-    context = {'rooms': rooms, 'topics': topics, 'room_count': room_count}
+    room_messages = Message.objects.filter(Q(room__topic__name__icontains = q)) #.order_by('-created')
+    # room_messages = Message.objects.all()
+    context = {'rooms': rooms, 'topics': topics, 
+                'room_count': room_count, 'room_messages':room_messages}
     return render(request, 'base/home.html', context)
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    room_messages = room.message_set.all().order_by('-created') #from Message in models, small here #many-to-one=> set_all
-    participants = room.participants.all()#many-many= all()
+    room_messages = room.message_set.all().order_by('-created') #from Message in models, small here #many-to-one=> _set.all()
+    participants = room.participants.all()#many-many= .all()
     if request.method == 'POST':
         message = Message.objects.create( #creating the message here
             user=request.user,
@@ -96,6 +98,15 @@ def room(request, pk):
     context = {'room': room, 'room_messages': room_messages,
                 'participants': participants}
     return render(request, 'base/room.html', context)
+
+def userProfile(request, pk):
+    user = User.objects.get(id=pk)
+    rooms =  user.room_set.all()
+    room_messages =  user.message_set.all()
+    topics = Topic.objects.all()
+    context = {'user':user, 'rooms':rooms, 'room_messages':room_messages,
+                'topics':topics} #rooms is used beacuse feed_comp and others use rooms
+    return render(request, 'base/profile.html', context)
 
 @login_required(login_url='login')
 def createRoom(request):
@@ -162,10 +173,11 @@ def editMessage(request, pk):
         return HttpResponse('Not your instance!')
 
     if request.method == 'POST':
-        form = MessageForm(request.POST, instance = message)
+        form = MessageForm(request.POST, instance = message) #directing to the form in room_form.html
         if form.is_valid():
             form.save()
             return redirect('room', pk=message.room_id)
+            # return render(f'base/room/{message.room_id}.html')
             # return HttpResponseRedirect(previous_page) #find more
 
     context = {'form': form} #KEEP NAMES SAME!!!!!
