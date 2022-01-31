@@ -1,13 +1,14 @@
+from email.message import Message
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.contrib.auth.models import User #creating a user model using django library
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic
-from .forms import RoomForm
+from .models import Room, Topic, Message
+from .forms import RoomForm, MessageForm
 import pdb
 
 # Create your views here.
@@ -81,7 +82,19 @@ def home(request):
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    context = {'room': room}
+    room_messages = room.message_set.all().order_by('-created') #from Message in models, small here #many-to-one=> set_all
+    participants = room.participants.all()#many-many= all()
+    if request.method == 'POST':
+        message = Message.objects.create( #creating the message here
+            user=request.user,
+            room=room,
+            body = request.POST.get('body')
+        )
+        room.participants.add(request.user)#adding participant(user) to the many-to-many field
+        return redirect('room', pk=room.id) 
+    
+    context = {'room': room, 'room_messages': room_messages,
+                'participants': participants}
     return render(request, 'base/room.html', context)
 
 @login_required(login_url='login')
@@ -93,13 +106,14 @@ def createRoom(request):
             form.save()
             return redirect('home')
 
-    context = {'form': form}
+    context = {'form': form} 
     return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
 def updateRoom(request, pk):
     room = Room.objects.get(id = pk)
-    form = RoomForm(instance = room)
+    # pdb.set_trace()
+    form = RoomForm(instance = room)#prefilling the room form
     
     if request.user != room.host:
         return HttpResponse('Not your instance!')
@@ -124,3 +138,36 @@ def deleteRoom(request, pk):
         room.delete()
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': room})
+
+    
+@login_required(login_url='login')
+def deleteMessage(request, pk):
+    message = Message.objects.get(id=pk)
+    # pdb.set_trace()
+    if request.user != message.user:
+        return HttpResponse('Not your instance')
+
+    if request.method == "POST":
+        message.delete()
+        return redirect('home')
+    return render(request, 'base/delete.html', {'obj': message})
+
+@login_required(login_url='login')
+def editMessage(request, pk):
+    # previous_page = request.META.get('HTTP_REFERER')
+    message = Message.objects.get(id=pk)
+    form = MessageForm(instance = message) #prefilling the message form
+
+    if request.user != message.user:
+        return HttpResponse('Not your instance!')
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST, instance = message)
+        if form.is_valid():
+            form.save()
+            return redirect('room', pk=message.room_id)
+            # return HttpResponseRedirect(previous_page) #find more
+
+    context = {'form': form} #KEEP NAMES SAME!!!!!
+    return render(request, 'base/room_form.html', context)
+
