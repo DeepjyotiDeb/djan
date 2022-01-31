@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "djan",
+            "database": "${workspaceFolder:djan}/newb/db.sqlite3"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
