@@ -1,19 +1,9 @@
-{% comment %} <div>
-    
-    <div>
-        <a href="{% url 'user-profile' room.host.id %}"> @{{room.host.username}} </a>
-        <h3>{{room.id}} -- roomname: <a href = "{% url 'room' room.id %}">{{room.name}}</a></h3>
-        <small>topic: {{room.topic.name}}</small>
-        <hr>
-    </div>    
-               {% endcomment %}
-
     {%for room in rooms%}
 <div class="roomListRoom">
     <div class="roomListRoom__header">
       <a href="{%url 'user-profile' room.host.id%}" class="roomListRoom__author">
         <div class="avatar avatar--small">
-          <img src="https://randomuser.me/api/portraits/women/11.jpg" />
+          <img src="{{room.host.avatar.url}}" />
         </div>
         <span>{{room.host.username}}</span>
       </a>

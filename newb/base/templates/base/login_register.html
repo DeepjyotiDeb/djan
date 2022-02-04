@@ -16,8 +16,8 @@
             <form class="form" action="" method="POST">
               {% csrf_token %}
               <div class="form__group form__group">
-                <label for="room_name">Username</label>
-                <input id="username" name="username" type="text" placeholder="e.g. peter parker" />
+                <label for="room_name">Email</label>
+                <input id="username" name="email" type="text" placeholder="e.g. peter parker" />
               </div>
               <div class="form__group">
                 <label for="password">Password</label>
@@ -45,7 +45,6 @@
                     d="M15 21.694v4.306h2v-4.306c0.587-0.348 1-0.961 1-1.694 0-1.105-0.895-2-2-2s-2 0.895-2 2c0 0.732 0.413 1.345 1 1.694z"
                   ></path>
                 </svg>
-
                 Login
               </button>
             </form>
@@ -54,6 +53,13 @@
               <p>Haven't signed up yet?</p>
               <a href="{% url 'register' %}" class="btn btn--link">Sign Up</a>
             </div>
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -76,7 +82,7 @@
                 {{field}}
               </div>
               {% endfor %}
-              {% comment %} <div class="form__group">
+              <!-- {% comment %} <div class="form__group">
                 <label for="password">Password</label>
                 <input
                   id="password"
@@ -84,7 +90,7 @@
                   type="password"
                   placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                 />
-              </div> {% endcomment %}
+              </div> {% endcomment %} -->
 
               <button class="btn btn--main" type="submit">
                 <svg
@@ -108,8 +114,8 @@
             </form>
 
             <div class="auth__action">
-              <p>Already signed up yet?</p>
-              <a href="{% url 'login' %}" class="btn btn--link">Sign Up</a>
+              <p>Have an account?</p>
+              <a href="{% url 'login' %}" class="btn btn--link">Login</a>
             </div>
           </div>
         </div>
