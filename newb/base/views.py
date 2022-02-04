@@ -8,7 +8,7 @@ from django.contrib.auth.models import User #creating a user model using django 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from .models import Room, Topic, Message
-from .forms import RoomForm, MessageForm
+from .forms import RoomForm, MessageForm, UserForm
 import pdb
 
 # Create your views here.
@@ -52,7 +52,7 @@ def registerPage(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False) #to get user object? to make sure data can be clean data?
+            user = form.save(commit=False) #to not auto save and go to next line
             user.username = user.username.lower()
             user.save()
             login(request, user) #log the user
@@ -111,18 +111,32 @@ def userProfile(request, pk):
 @login_required(login_url='login')
 def createRoom(request):
     form = RoomForm()
+    topics = Topic.objects.all()
     if request.method == 'POST':
-        form = RoomForm(request.POST) #saving to db
-        if form.is_valid():
-            form.save()
-            return redirect('home')
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
 
-    context = {'form': form} 
+        Room.objects.create(
+            host=request.user,
+            topic=topic,
+            name=request.POST.get('name'),
+            description=request.POST.get('description')
+        )
+        # form = RoomForm(request.POST) #saving to db
+        # if form.is_valid():
+        #     room = form.save(commit=False) #to not automatically save
+        #     room.host = request.user
+        #     room.save()
+        return redirect('home')
+
+    context = {'form': form , 'topics':topics} 
     return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
 def updateRoom(request, pk):
     room = Room.objects.get(id = pk)
+    form=RoomForm(instance=room)
+    topics = Topic.objects.all()
     # pdb.set_trace()
     form = RoomForm(instance = room)#prefilling the room form
     
@@ -130,12 +144,15 @@ def updateRoom(request, pk):
         return HttpResponse('Not your instance!')
 
     if request.method == 'POST':
-        form = RoomForm(request.POST, instance = room)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+        room.name=request.POST.get('name')
+        room.topic = topic
+        room.description = request.POST.get('description')
+        room.save()
+        return redirect('home')
         
-    context = {'form': form}
+    context = {'form': form, 'topics':topics, 'room':room}
     return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
@@ -168,7 +185,7 @@ def editMessage(request, pk):
     # previous_page = request.META.get('HTTP_REFERER')
     message = Message.objects.get(id=pk)
     form = MessageForm(instance = message) #prefilling the message form
-
+    # pdb.set_trace()
     if request.user != message.user:
         return HttpResponse('Not your instance!')
 
@@ -181,5 +198,16 @@ def editMessage(request, pk):
             # return HttpResponseRedirect(previous_page) #find more
 
     context = {'form': form} #KEEP NAMES SAME!!!!!
-    return render(request, 'base/room_form.html', context)
+    return render(request, 'base/edit-message-form.html', context)
 
+@login_required(login_url='login')
+def updateUser(request):
+    user =request.user
+    form = UserForm(instance=user)
+
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user-profile', pk=user.id)
+    return render(request, 'base/update-user.html', {'form':form})
